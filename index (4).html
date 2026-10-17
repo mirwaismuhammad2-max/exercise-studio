@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lesson Exercise Studio</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f5f1;--card:#fff;--ink:#1d2a2a;--mut:#667;--ac:#0f766e;--acx:#fff;--bd:#d9d6cc}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#141a1a;--card:#1d2626;--ink:#e8efee;--mut:#9ab;--ac:#2dd4bf;--acx:#06201c;--bd:#2e3b3b}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#141a1a;--card:#1d2626;--ink:#e8efee;--mut:#9ab;--ac:#2dd4bf;--acx:#06201c;--bd:#2e3b3b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+header{padding:14px 16px 6px}h1{font-size:20px;margin:0}small,.mut{color:var(--mut)}
+.tabs{display:flex;gap:6px;padding:8px 12px;overflow-x:auto}
+.tabs button{flex:none}
+button,select,input,textarea{font:inherit;color:var(--ink)}
+button{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 13px;cursor:pointer}
+button.on,button.pri{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+main{padding:0 12px 40px;max-width:760px;margin:auto}
+section{display:none}section.show{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin:10px 0}
+.card h3{margin:0 0 8px;font-size:16px}
+textarea,input[type=text],input[type=number],select{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px}
+textarea{min-height:90px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.qt{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--bd)}
+.qt label{flex:1}.qt input[type=number]{width:70px}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.thumbs img{height:56px;border-radius:8px;border:1px solid var(--bd)}
+#out{white-space:pre-wrap;min-height:220px;background:#fff;color:#111;border:1px solid var(--bd);border-radius:10px;padding:14px;overflow-wrap:anywhere}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+canvas{width:100%;touch-action:none;background:#fff;border:1px solid var(--bd);border-radius:10px}
+.hi{border-bottom:1px solid var(--bd);padding:8px 0}
+#st{position:sticky;bottom:0;background:var(--ac);color:var(--acx);padding:6px 12px;font-size:14px;display:none}
+</style></head><body>
+<header><h1>Lesson Exercise Studio</h1><small id="net"></small></header>
+<div class="tabs" id="tabs">
+<button data-t="gen" class="on">Generate</button><button data-t="sol">Solve</button><button data-t="res">Edit &amp; Export</button><button data-t="ske">Sketch</button><button data-t="his">History</button></div>
+<main>
+<section id="gen" class="show">
+<div class="card"><h3>1. Lesson</h3>
+<input type="text" id="subj" placeholder="Subject and language (e.g. Science, English)">
+<p class="mut" style="margin:8px 0 4px">Add photos of the lesson and/or paste its text.</p>
+<input type="file" id="lf" accept="image/*" multiple><div class="thumbs" id="lt"></div>
+<textarea id="ltx" placeholder="Lesson text (optional if you added photos)" style="margin-top:8px"></textarea></div>
+<div class="card"><h3>2. Questions to make</h3><div id="types"></div>
+<p class="mut" style="margin:6px 0 0">Tick the types, set how many of each. They are numbered in the order shown.</p></div>
+<div class="card"><h3>AI key</h3><input type="text" id="key" placeholder="Paste your Anthropic API key (saved on this device only)"></div>
+<script>try{document.getElementById("key").value=localStorage.getItem("ex_key")||""}catch(e){}document.getElementById("key").onchange=e=>{try{localStorage.setItem("ex_key",e.target.value.trim())}catch(x){}}</script>
+<button class="pri" id="go" style="width:100%;padding:13px">Generate exercise</button>
+</section>
+<section id="sol">
+<div class="card"><h3>Exercise to solve</h3>
+<p class="mut" style="margin:0 0 4px">Photo of the exercise page, or type the questions.</p>
+<input type="file" id="ef" accept="image/*" multiple><div class="thumbs" id="et"></div>
+<textarea id="etx" placeholder="Type questions here (optional)" style="margin-top:8px"></textarea></div>
+<div class="card"><h3>Lesson (the answers come from this)</h3>
+<input type="file" id="sf" accept="image/*" multiple><div class="thumbs" id="st2"></div>
+<textarea id="stx" placeholder="Lesson text (optional if you added photos)" style="margin-top:8px"></textarea></div>
+<button class="pri" id="solve" style="width:100%;padding:13px">Find answers</button>
+</section>
+<section id="res">
+<div class="card"><h3>Editor</h3>
+<p class="mut" style="margin:0 0 8px">Tap the text to edit. Select words, then tap Highlight.</p>
+<div class="row" style="margin-bottom:8px"><button id="hl">Highlight</button><button id="unhl">Clear highlight</button><button id="bd">Bold</button></div>
+<div id="out" contenteditable="true" spellcheck="false" dir="auto"></div></div>
+<div class="card"><h3>Page setup</h3><div class="grid">
+<div><small>Orientation</small><select id="ori"><option value="p">Portrait</option><option value="l">Landscape</option></select></div>
+<div><small>Paper size</small><select id="pap"><option>A4</option><option>A3</option><option>A5</option><option>Legal</option><option>Letter</option></select></div>
+<div><small>Split over pages</small><input type="number" id="pgs" value="1" min="1" max="30"></div>
+<div><small>Font size: <b id="fsv">16</b></small><input type="range" id="fs" min="9" max="32" value="16" style="width:100%"></div>
+<div style="grid-column:1/3"><small>Line spacing: <b id="lhv">1.5</b></small><input type="range" id="lh" min="1" max="3" step="0.1" value="1.5" style="width:100%"></div></div></div>
+<div class="card"><h3>Export</h3><div class="row"><button class="pri" data-x="pdf">PDF</button><button class="pri" data-x="docx">Word</button><button class="pri" data-x="xlsx">Excel</button><button data-x="txt">Text</button></div>
+<p class="mut" style="margin:8px 0 0">PDF supports English text. For Urdu or other scripts use Word.</p></div>
+</section>
+<section id="ske">
+<div class="card"><h3>Offline sketch pad</h3>
+<div class="row" style="margin-bottom:8px"><input type="color" id="col" value="#222222"><input type="range" id="bw" min="1" max="16" value="3"><button id="er">Eraser</button><button id="pen" class="on">Pencil</button><button id="cc">Clear</button><button id="sv" class="pri">Save PNG</button></div>
+<canvas id="cv" width="700" height="500"></canvas></div>
+</section>
+<section id="his"><div id="hl2"></div><button id="clh">Clear history</button></section>
+</main>
+<div id="st"></div>
+<script src="libs/jspdf.umd.min.js"></script>
+<script src="libs/xlsx.full.min.js"></script>
+<script src="libs/docx.js"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const TYPES=["Fill in the blanks","True / False","MCQs (choose the best option)","Short questions","Long questions","Matching columns","Word meanings / synonyms","Grammar"];
+const DEF=[10,10,10,10,5,10,10,5];
+$("#types").innerHTML=TYPES.map((t,i)=>`<div class="qt"><input type="checkbox" id="c${i}"><label for="c${i}">${t}</label><input type="number" id="n${i}" value="${DEF[i]}" min="1" max="50"></div>`).join("");
+const status=m=>{const s=$("#st");s.textContent=m||"";s.style.display=m?"block":"none"};
+function net(){$("#net").textContent=navigator.onLine?"Online: AI generation available":"Offline: basic generator, history, editor, export and sketch work"}
+addEventListener("online",net);addEventListener("offline",net);net();
+$$("#tabs button").forEach(b=>b.onclick=()=>show(b.dataset.t));
+function show(t){$$("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));$$("section").forEach(s=>s.classList.toggle("show",s.id===t));if(t==="his")renderHist()}
+const F={lf:[],ef:[],sf:[]};
+[["lf","lt"],["ef","et"],["sf","st2"]].forEach(([k,t])=>$("#"+k).onchange=e=>{F[k]=[...e.target.files];$("#"+t).innerHTML=F[k].map(f=>`<img src="${URL.createObjectURL(f)}">`).join("")});
+let H=[];try{H=JSON.parse(localStorage.getItem("ex_hist")||"[]")}catch(e){}
+function addHist(kind,title,text){H.unshift({t:Date.now(),kind,title,text});H=H.slice(0,60);try{localStorage.setItem("ex_hist",JSON.stringify(H))}catch(e){}}
+function renderHist(){$("#hl2").innerHTML=H.length?H.map((h,i)=>`<div class="card"><b>${esc(h.title)}</b><br><small>${h.kind} · ${new Date(h.t).toLocaleString()}</small><div class="row" style="margin-top:8px"><button data-o="${i}">Open</button><button data-d="${i}">Delete</button></div></div>`).join(""):'<div class="card mut">Nothing yet. Generated and solved sets are listed here by date.</div>';
+$$("[data-o]").forEach(b=>b.onclick=()=>{load(H[b.dataset.o].text)});$$("[data-d]").forEach(b=>b.onclick=()=>{H.splice(+b.dataset.d,1);try{localStorage.setItem("ex_hist",JSON.stringify(H))}catch(e){}renderHist()})}
+$("#clh").onclick=()=>{if(confirm("Clear all history?")){H=[];try{localStorage.removeItem("ex_hist")}catch(e){}renderHist()}};
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function load(text){$("#out").innerHTML=esc(text).replace(/\n/g,"<br>");show("res")}
+const KEY=()=>{try{return localStorage.getItem("ex_key")||""}catch(e){return ""}};
+const b64=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result.split(",")[1]);x.readAsDataURL(f)});
+async function ai(prompt,files){
+ if(!navigator.onLine||!KEY())return null;
+ const c=[];for(const f of files.slice(0,10))c.push({type:"image",source:{type:"base64",media_type:f.type||"image/jpeg",data:await b64(f)}});
+ c.push({type:"text",text:prompt});
+ const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":KEY(),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:4000,messages:[{role:"user",content:c}]})});
+ if(!r.ok)throw new Error(await r.text());
+ const d=await r.json();return d.content.map(i=>i.text||"").join("")}
+function offlineGen(text,sel){
+ const ss=text.split(/(?<=[.!?۔])\s+/).map(s=>s.trim()).filter(s=>s.length>25);
+ if(!ss.length)return "Offline mode needs pasted lesson text (photos need the internet).";
+ let q=0,out=[];
+ for(const [i,n] of sel){q++;let h=`Question ${q}: ${TYPES[i]}`,L=[];
+  for(let k=0;k<n;k++){const s=ss[k%ss.length];
+   if(i===0){const w=s.split(/\s+/).sort((a,b)=>b.length-a.length)[0].replace(/[.,;:!?]/g,"");L.push(`${k+1}. [${w}] ${s.replace(w,"________")}`)}
+   else if(i===1)L.push(`${k+1}. [T] ${s}`);
+   else if(i===3||i===4)L.push(`${k+1}. Explain: ${s.split(/\s+/).slice(0,7).join(" ")} ...`);
+   else L.push(`${k+1}. (This type needs the AI. Connect to the internet.)`)}
+  out.push(h+"\n"+L.join("\n"))}
+ return out.join("\n\n")}
+$("#go").onclick=async()=>{
+ const sel=TYPES.map((t,i)=>$("#c"+i).checked?[i,Math.max(1,+$("#n"+i).value||1)]:null).filter(Boolean);
+ const text=$("#ltx").value.trim();
+ if(!sel.length)return alert("Tick at least one question type.");
+ if(!text&&!F.lf.length)return alert("Add lesson photos or text first.");
+ status("Generating…");let r=null,i=0;
+ const list=sel.map(([ti,n])=>`Question ${++i}: ${TYPES[ti]} — ${n} items`).join("\n");
+ const p=`You are a teacher's assistant. Subject/language: ${$("#subj").value||"as in the lesson"}. Using ONLY the lesson below (text and any attached photos), write an exercise with exactly these sections in this order:\n${list}\n\nFormat rules (plain text, no markdown, no extra commentary):\n- Start each section with "Question N: <type>" on its own line, then items numbered 1., 2., 3. each on its own line.\n- Leave exactly one blank line between sections.\n- Fill in the blanks: write the correct answer in square brackets at the FRONT of each sentence, e.g. "1. [answer] The ____ is ...".\n- True / False: put [T] or [F] at the front of each statement.\n- MCQs: question, then options a) b) c) d); put the correct option letter in brackets at the front.\n- Matching columns: two columns with numbers and letters, then the answer key.\n- Word meanings: word followed by its meaning/synonym in brackets at the front.\n- Write in the language of the lesson.\n\nLESSON TEXT:\n${text||"(see photos)"}`;
+ try{r=await ai(p,F.lf)}catch(e){r=null}
+ if(!r){r=offlineGen(text,sel);status("Offline basic version made (needs text)");setTimeout(()=>status(""),2500)}else status("");
+ addHist("Generated",($("#subj").value||"Exercise")+" · "+sel.length+" question type(s)",r);load(r)};
+$("#solve").onclick=async()=>{
+ const q=$("#etx").value.trim(),l=$("#stx").value.trim();
+ if(!q&&!F.ef.length)return alert("Add the exercise as a photo or text.");
+ if(!navigator.onLine)return alert("Solving needs the internet. Generating, editing, export and sketch work offline.");
+ status("Finding answers…");let r=null;
+ const p=`You are a teacher's assistant. Answer the exercise questions using ONLY the lesson provided (text and attached photos). The first photos (if any) are the exercise, the rest are the lesson.\nFormat: plain text, keep the original question numbering, one blank line after each question, short answers for short questions, 2 to 4 lines for long questions, fill in the blanks with the missing word, MCQs with the correct option, True/False with T or F. Answer in the language of the question.\n\nEXERCISE TEXT:\n${q||"(see photos)"}\n\nLESSON TEXT:\n${l||"(see photos)"}`;
+ try{r=await ai(p,F.ef.concat(F.sf))}catch(e){r=null}
+ status("");if(!r)return alert("Could not reach the AI. Check internet and the AI key on the Generate tab.");
+ addHist("Solved",(q||"Exercise photo").slice(0,40),r);load(r)};
+const out=$("#out");
+function fmt(){out.style.fontSize=$("#fs").value+"px";out.style.lineHeight=$("#lh").value;$("#fsv").textContent=$("#fs").value;$("#lhv").textContent=$("#lh").value}
+$("#fs").oninput=$("#lh").oninput=fmt;fmt();
+$("#hl").onclick=()=>document.execCommand("hiliteColor",false,"#fde047");
+$("#unhl").onclick=()=>document.execCommand("hiliteColor",false,"transparent");
+$("#bd").onclick=()=>document.execCommand("bold");
+const SZ={A4:[210,297],A3:[297,420],A5:[148,210],Legal:[216,356],Letter:[216,279]};
+function pages(){const t=out.innerText.replace(/\n{3,}/g,"\n\n").trim(),n=Math.max(1,+$("#pgs").value||1);
+ const b=t.split(/\n\s*\n/),per=Math.ceil(b.length/n),r=[];for(let i=0;i<b.length;i+=per)r.push(b.slice(i,i+per).join("\n\n"));return r}
+async function save(name,data){
+ try{const P=window.Capacitor&&Capacitor.Plugins;
+  if(P&&P.Filesystem&&P.Share){const b=await b64(data);
+   const f=await P.Filesystem.writeFile({path:name,data:b,directory:"CACHE"});
+   await P.Share.share({title:name,url:f.uri,dialogTitle:"Save or share"});return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(data);a.download=name;a.click()
+ }catch(e){if(!/cancel/i.test(e.message||""))alert("Could not save: "+(e.message||e))}}
+document.querySelectorAll("[data-x]").forEach(b=>b.onclick=async()=>{
+ const x=b.dataset.x,pg=pages(),fs=+$("#fs").value,lh=+$("#lh").value,[w,h]=SZ[$("#pap").value],land=$("#ori").value==="l",nm="exercise";
+ if(!pg.join("").trim())return alert("Nothing to export yet.");
+ try{
+ if(x==="txt")return save(nm+".txt",new Blob([pg.join("\n\n")],{type:"text/plain"}));
+ if(x==="pdf"){const J=window.jspdf.jsPDF,d=new J({orientation:land?"l":"p",unit:"mm",format:[w,h]}),W=land?h:w,H2=land?w:h,m=15,step=fs*0.3528*lh;
+  pg.forEach((t,i)=>{if(i)d.addPage();d.setFontSize(fs);let y=m+fs*0.3528;
+   d.splitTextToSize(t,W-2*m).forEach(l=>{if(y>H2-m){d.addPage();y=m+fs*0.3528}d.text(l,m,y);y+=step})});
+  return save(nm+".pdf",d.output("blob"))}
+ if(x==="xlsx"){const rows=pg.join("\n\n").split("\n").map(l=>[l]),ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=[{wch:90}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Exercise");
+  return save(nm+".xlsx",new Blob([XLSX.write(wb,{type:"array",bookType:"xlsx"})],{type:"application/octet-stream"}))}
+ if(x==="docx"){const D=window.docx,ch=[];
+  pg.forEach((t,i)=>{if(i)ch.push(new D.Paragraph({children:[new D.PageBreak()]}));
+   t.split("\n").forEach(l=>ch.push(new D.Paragraph({spacing:{line:Math.round(240*lh)},bidirectional:/[\u0600-\u06FF]/.test(l),children:[new D.TextRun({text:l,size:fs*2})]})))});
+  const doc=new D.Document({sections:[{properties:{page:{size:{width:Math.round(w*56.7),height:Math.round(h*56.7),orientation:land?D.PageOrientation.LANDSCAPE:D.PageOrientation.PORTRAIT}}},children:ch}]});
+  return save(nm+".docx",await D.Packer.toBlob(doc))}
+ }catch(e){alert("Export failed: "+e.message)}});
+const cv=$("#cv"),cx=cv.getContext("2d");let dr=false,er=false;cx.fillStyle="#fff";cx.fillRect(0,0,700,500);cx.lineCap="round";
+const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*700/r.width,(e.clientY-r.top)*500/r.height]};
+cv.onpointerdown=e=>{dr=true;cv.setPointerCapture(e.pointerId);const[x,y]=pt(e);cx.beginPath();cx.moveTo(x,y)};
+cv.onpointermove=e=>{if(!dr)return;const[x,y]=pt(e);cx.strokeStyle=er?"#fff":$("#col").value;cx.lineWidth=er?+$("#bw").value*4:+$("#bw").value;cx.lineTo(x,y);cx.stroke()};
+cv.onpointerup=()=>dr=false;
+$("#er").onclick=()=>{er=true;$("#er").classList.add("on");$("#pen").classList.remove("on")};
+$("#pen").onclick=()=>{er=false;$("#pen").classList.add("on");$("#er").classList.remove("on")};
+$("#cc").onclick=()=>{cx.fillStyle="#fff";cx.fillRect(0,0,700,500)};
+$("#sv").onclick=()=>cv.toBlob(b=>save("sketch.png",b));
+</script></body></html>
